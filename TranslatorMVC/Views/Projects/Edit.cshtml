@@ -1,0 +1,68 @@
+﻿@model TranslatorMVC.Models.Project
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit Project</h1>
+
+ <hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="ProjectID" />
+            <div class="form-group">
+                <label asp-for="Proj_Name" class="control-label">Name</label>
+                <input asp-for="Proj_Name" class="form-control mb-2" />
+                <span asp-validation-for="Proj_Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Proj_ClientName" class="control-label">Client's name</label>
+                <input asp-for="Proj_ClientName" class="form-control mb-2" />
+                <span asp-validation-for="Proj_ClientName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Proj_Capacity" class="control-label">Capacity</label>
+                <input asp-for="Proj_Capacity" class="form-control mb-2" />
+                <span asp-validation-for="Proj_Capacity" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Proj_Price" class="control-label">Price</label>
+                <input asp-for="Proj_Price" class="form-control mb-2" />
+                <span asp-validation-for="Proj_Price" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Proj_StartDate" class="control-label">Start Date</label>
+                <input asp-for="Proj_StartDate" class="form-control mb-2" />
+                <span asp-validation-for="Proj_StartDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Proj_DeadLine" class="control-label">End Date</label>
+                <input asp-for="Proj_DeadLine" class="form-control mb-2" />
+                <span asp-validation-for="Proj_DeadLine" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Proj_Note" class="control-label">Notes</label>
+                <input asp-for="Proj_Note" class="form-control mb-2" />
+                <span asp-validation-for="Proj_Note" class="text-danger"></span>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input mb-2" asp-for="Proj_Active" /> Active
+                </label>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary mb-2" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

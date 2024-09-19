@@ -1,0 +1,56 @@
+﻿@model IEnumerable<TranslatorMVC.Models.EmployeeProject>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<link rel="stylesheet" href="https://cdn.datatables.net/2.1.6/css/dataTables.dataTables.css" />
+
+<script src="https://cdn.datatables.net/2.1.6/js/dataTables.js"></script>
+
+<h1>Assignments Table</h1>
+@* 
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Assignment</a>
+</p> *@
+<table class="table" id="AssignmentsTable">
+    <thead>
+        <tr>
+   
+            <th>ProjectID</th>
+            <th>Assigned</th>
+            <th>EmployeeID</th>
+            <th>Is Completed</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+ 
+            <td>
+                @item.Project?.Proj_Name <!-- Assuming Project has a Name property -->
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Assigned)
+            </td>
+            <td>
+               @item.Employee?.Emp_Name</td> <!-- Assuming Employee has a Name property -->        
+            <td>
+                @Html.DisplayFor(modelItem => item.isCompleted)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.EmployeeProjectID" class="btn btn-secondary">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.EmployeeProjectID" class="btn btn-dark">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.EmployeeProjectID" class="btn btn-danger">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+<script>
+    $('#AssignmentsTable').DataTable();
+</script>  

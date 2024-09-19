@@ -1,0 +1,77 @@
+﻿@model IEnumerable<TranslatorMVC.Models.Project>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<link rel="stylesheet" href="https://cdn.datatables.net/2.1.6/css/dataTables.dataTables.css" />
+
+<script src="https://cdn.datatables.net/2.1.6/js/dataTables.js"></script>
+
+<h1>Projects Table</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Project</a>
+</p>
+<table class="table" id="ProjectsTable">
+    <thead>
+        <tr>
+            <th>Project Name</th>
+            <th>Client Name</th>
+            <th>Project Capacity</th>
+            <th>Price</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Notes</th>
+            <th>Active</th>
+            <th>Created Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Proj_Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Proj_ClientName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Proj_Capacity)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Proj_Price)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Proj_StartDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Proj_DeadLine)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Proj_Note)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Proj_Active)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Proj_CreateDate)
+            </td>
+            <td>
+                    <a asp-action="Edit" class="btn btn-secondary m-1" asp-route-id="@item.ProjectID">Edit</a>
+                    <a asp-action="Details" class="btn btn-dark m-1" asp-route-id="@item.ProjectID">Details</a>
+                    <a asp-action="Delete" class="btn btn-danger" asp-route-id="@item.ProjectID">Delete</a>
+                    <a asp-controller="EmployeeProjects" asp-action="Create" asp-route-projectId="@item.ProjectID" class="btn btn-primary">Assign</a>
+
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+<script>
+    $('#ProjectsTable').DataTable();
+</script>  

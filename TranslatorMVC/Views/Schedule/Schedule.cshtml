@@ -1,0 +1,64 @@
+﻿@model IEnumerable<dynamic>
+
+<head>
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.9.0/main.min.css' rel='stylesheet' />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.9.0/main.min.js'></script>
+</head>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Employee Name</th>
+            <th>Shift Start</th>
+            <th>Shift End</th>
+            <th>Capacity</th>
+            <th>Assigned</th>
+            <th>Remaining Capacity</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var shifts in Model)
+        {
+            <tr>
+                <td>@shifts.EmployeeName</td>
+                <td>@shifts.Shift_Start.ToString("g")</td>
+                <td>@shifts.Shift_End.ToString("g")</td>
+                <td>@shifts.Emp_Capacity</td>
+                <td>@shifts.Assigned</td>
+                <td>@shifts.RemainingCapacity</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Displaying shifts in a calendar using FullCalendar -->
+<div id="calendar"></div>
+
+@section Scripts {
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.9.0/main.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.9.0/main.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var calendarEl = document.getElementById('calendar');
+
+            // Initialize FullCalendar
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                events: '/Schedule/GetShifts', // API endpoint for dynamic loading
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                eventTimeFormat: { // Customize the display of event times
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    meridiem: false
+                }
+            });
+
+            calendar.render();
+        });
+    </script>
+}

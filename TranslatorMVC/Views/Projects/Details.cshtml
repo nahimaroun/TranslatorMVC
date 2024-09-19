@@ -1,0 +1,74 @@
+﻿@model TranslatorMVC.Models.Project
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Project</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+          Name
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Proj_Name)
+        </dd>
+        <dt class = "col-sm-2">
+           Client Name
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Proj_ClientName)
+        </dd>
+        <dt class = "col-sm-2">
+         Capacity
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Proj_Capacity)
+        </dd>
+        <dt class = "col-sm-2">
+        Price
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Proj_Price)
+        </dd>
+        <dt class="col-sm-2">
+            Start Date
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Proj_StartDate)
+        </dd>
+        <dt class = "col-sm-2">
+           End Date
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Proj_DeadLine)
+        </dd>
+       
+        <dt class = "col-sm-2">
+          Notes
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Proj_Note)
+        </dd>
+        <dt class = "col-sm-2">
+          Active
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Proj_Active)
+        </dd>
+        <dt class = "col-sm-2">
+        Created Date
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Proj_CreateDate)
+        </dd>
+       
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" class="btn btn-primary" asp-route-id="@Model?.ProjectID">Edit</a> |
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>

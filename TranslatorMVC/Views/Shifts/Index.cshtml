@@ -1,0 +1,50 @@
+﻿@model IEnumerable<TranslatorMVC.ViewModels.ShiftViewModel>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<link rel="stylesheet" href="https://cdn.datatables.net/2.1.6/css/dataTables.dataTables.css" />
+
+<script src="https://cdn.datatables.net/2.1.6/js/dataTables.js"></script>
+
+<h1>Shifts Table</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Shift</a>
+</p>
+<table class="table" id="ShiftsTable">
+    <thead>
+        <tr>
+            <th>Shift Start</th>
+            <th>Shift End</th>
+            <th>Employee</th>
+            <th>Employee Capacity</th>
+            <th>Active</th>
+            <th>Actions</th>
+        </tr>
+
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+                <td>@item.Shift_Start</td>
+                <td>@item.Shift_End</td>
+                <td>@item.EmployeeName</td>
+                <td>@item.Emp_Capacity</td>
+                <td>@item.Shift_Active</td>
+            <td>
+                <a asp-action="Edit" class="btn btn-secondary" asp-route-id="@item.ShiftID">Edit</a> |
+                    <a asp-action="Details" class="btn btn-dark" asp-route-id="@item.ShiftID">Details</a> |
+                    <a asp-action="Delete" class="btn btn-danger" asp-route-id="@item.ShiftID">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+<script>
+        $('#ShiftsTable').DataTable();
+</script>  
