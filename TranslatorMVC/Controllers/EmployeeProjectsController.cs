@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using TranslatorMVC.Models;
 
@@ -183,27 +184,55 @@ namespace TranslatorMVC.Controllers
             return _context.EmployeeProject.Any(e => e.EmployeeProjectID == id);
         }
 
-        [HttpPost]
+        [HttpGet]
         public IActionResult GetShiftsForDate(DateTime selectedDate)
         {
             try
             {
+                // Fetch shifts for the selected date and include the Employee navigation property
                 var shifts = _context.Shift
                     .Where(s => s.Shift_Start.Date == selectedDate.Date && s.Shift_Active)
-                    .Include(s => s.Employeeproject) // Include EmployeeProjects navigation property
+                    .Include(s => s.Employee) // Assuming Employee is a navigation property in Shift
                     .ToList();
 
-                var shiftEmployees = shifts.SelectMany(s => s.Employeeproject)
-                    .GroupBy(ep => ep.EmployeeID)
-                    .Select(g => new
+                var response = new List<object>();
+
+                if (shifts.Any())
+                {
+                    foreach (var s in shifts)
                     {
-                        Employee = g.FirstOrDefault()?.Employee, // Get employee details
-                        Shift = g.FirstOrDefault()?.Shift, // Get shift details
-                        RemainingCapacity = g.FirstOrDefault()?.Shift.Emp_Capacity - g.Sum(ep => ep.Assigned)
-                    })
-                    .ToList();
+                        // Get the employee name from the Employee table using the EmployeeID
+                        var employeeName = s.Employee?.Emp_Name; // Assuming Emp_Name is a field in Employee
 
-                return Json(shiftEmployees);
+                        // Fetch rows from EmployeeProject where ShiftID matches the current shift's ShiftID
+                        var employeeProjects = _context.EmployeeProject
+                            .Where(ep => ep.EmployeeID == s.EmployeeID && ep.ShiftID == s.ShiftID && ep.isCompleted == false) // Filter by EmployeeID and ShiftID
+                            .ToList();
+
+                        // Sum the Assigned values from these EmployeeProject rows
+                        var totalAssigned = employeeProjects.Sum(ep => ep.Assigned);
+
+                        // Calculate the remaining capacity by subtracting the total assigned from the shift capacity
+                        var remainingCapacity = s.Emp_Capacity - totalAssigned;
+
+                        // Build response object with employee name, shift details, and remaining capacity
+                        response.Add(new
+                        {
+                            shiftID = s.ShiftID,
+                            EmployeeId = s.EmployeeID,
+                            Emp_Name = employeeName,
+                            Shift_Start = s.Shift_Start,
+                            Shift_End = s.Shift_End,
+                            Remaining_Capacity = remainingCapacity
+                        });
+                    }
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    shifts = response
+                });
             }
             catch (Exception ex)
             {
@@ -213,39 +242,56 @@ namespace TranslatorMVC.Controllers
             }
         }
 
+
         [HttpPost]
-        public IActionResult AssignWords(int shiftId, int employeeId, int assignedWords)
+        public IActionResult AssignWords(int ShiftID, int EmployeeID, int ProjectID, int Assigned)
         {
             try
             {
-                var employeeProject = _context.EmployeeProject
-                    .FirstOrDefault(ep => ep.ShiftID == shiftId && ep.EmployeeID == employeeId);
+                // Fetch the shift to validate if the shift exists and capacity
+                var shift = _context.Shift
+                    .FirstOrDefault(s => s.ShiftID == ShiftID);
 
-                if (employeeProject == null)
+                if (shift == null)
                 {
-                    employeeProject = new EmployeeProject
-                    {
-                        ShiftID = shiftId,
-                        EmployeeID = employeeId,
-                        Assigned = assignedWords
-                    };
-                    _context.EmployeeProject.Add(employeeProject);
-                }
-                else
-                {
-                    employeeProject.Assigned += assignedWords;
+                    return BadRequest("Invalid shift ID.");
                 }
 
+                // Fetch any existing assignment for the same employee and shift (optional, if needed)
+                var existingAssignment = _context.EmployeeProject
+                    .FirstOrDefault(ep => ep.ShiftID == ShiftID && ep.EmployeeID == EmployeeID);
+
+                // Calculate remaining capacity (subtract assigned words from capacity)
+                var remainingCapacity = shift.Emp_Capacity - (existingAssignment?.Assigned ?? 0);
+
+                if (Assigned > remainingCapacity)
+                {
+                    return BadRequest("Assigned words exceed remaining capacity.");
+                }
+
+                // Create a new EmployeeProject record with the provided EmployeeID, ProjectID, ShiftID, and assignedWords
+                var newEmployeeProject = new EmployeeProject
+                {
+                    ShiftID = ShiftID,
+                    EmployeeID = EmployeeID,
+                    ProjectID = ProjectID,  // Make sure ProjectID is added in the EmployeeProject model
+                    Assigned = Assigned
+                };
+
+                // Add the new record to the database
+                _context.EmployeeProject.Add(newEmployeeProject);
                 _context.SaveChanges();
+
                 return Ok("Words assigned successfully!");
             }
             catch (Exception ex)
             {
-                // Log the exception and return a user-friendly error message
+                // Log the exception for debugging and return a user-friendly error message
                 Console.WriteLine(ex.Message);
                 return StatusCode(500, "An error occurred while assigning words.");
             }
         }
+
 
     }
 }

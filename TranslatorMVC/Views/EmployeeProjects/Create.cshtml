@@ -51,18 +51,22 @@
 
 @{
     ViewData["Title"] = "Shift Assignment";
+
 }
 
 <h2>@ViewData["Title"]</h2>
 
+@* Access the projectId here *@ 
+ViewBag.ProjectId = projectId;
+
 <div>
     <label for="selectedDate">Select Date:</label>
     <input type="date" id="selectedDate">
-    <button id="fetchShifts">Fetch Shifts</button>
+    <button id="fetchShifts" class="btn btn-secondary">Fetch Shifts</button>
 </div>
 
 <div id="shiftList"></div>
-
+@* 
 @section Scripts {
     <script>
         $(document).ready(function () {
@@ -70,26 +74,44 @@
                 var selectedDate = $("#selectedDate").val();
                 $.ajax({
                     url: '@Url.Action("GetShiftsForDate", "EmployeeProjects")',
-                    type: 'POST',
+                    type: 'GET',
                     data: { selectedDate: selectedDate },
                     success: function (data) {
+                        console.log(data); // Log data to inspect structure
+
                         var shiftList = $("#shiftList");
                         shiftList.empty();
 
-                        if (data.length === 0) {
-                            shiftList.append("<p>No shifts available for the selected date.</p>");
-                        } else {
-                            data.forEach(function (item) {
-                                var employeeRow = `<div class="employee-row">
-                                                            <p>Employee: ${item.Employee.Emp_Name}</p>
-                                                            <p>Remaining Capacity: ${item.RemainingCapacity}</p>
-                                                            <button class="assign-btn" data-shift-id="${item.Shift.ShiftID}" data-employee-id="${item.Employee.EmployeeID}" data-remaining-capacity="${item.RemainingCapacity}">Assign Words</button>
-                                                            <div class="assign-input" style="display:none;">
-                                                                <input type="number" class="form-control assign-words" placeholder="Enter number of words">
-                                                                <button class="submit-assign btn btn-success">Submit</button>
-                                                            </div>
-                                                        </div>`;
-                                shiftList.append(employeeRow);
+                        if (data.shifts.length === 0) {
+                            shiftList.append('<div class="col-12"><div class="alert alert-info">No shifts available for the selected date.</div></div>');
+                        } 
+                        else {
+                            data.shifts.forEach(function (shift) {
+                                var employeeCard = `
+                                    <div class="col-md-4 mb-4">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                                <h5 class="card-title">${shift.emp_Name || 'No Name'}</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <p><strong>Shift Start:</strong> ${shift.shift_Start}</p>
+                                                <p><strong>Shift End:</strong> ${shift.shift_End}</p>
+                                                <p><strong>Remaining Capacity:</strong> ${shift.remaining_Capacity || 'Not Available'}</p>
+                                            </div>
+                                              <div class="card-footer">
+                                                  <button type="button" class="btn btn-primary assign-btn">Assign new task</button>
+                                                          <div class='assign-input mt-3' style='display:none'>
+                                                          <div class='form-group'>
+                                                          <label class='mb-2'>Assign words </label>
+                                                                          <input class="form-control input1 mb-2" type="number" data-employee-id="${shift.employeeId}">
+                                                                                          <button type="button" data-remaining="${shift.remaining_Capacity || 0}" class="btn btn - success submit - assign" data-project-id="${projectId}" data-shift-id="${shiftID}" data-employee-id="${shift.employeeId}">Add</button>
+                                                          </div>
+                                                          </div>
+                                              </div>
+                                    </div>
+                                `;
+
+                                shiftList.append(employeeCard);
                             });
                         }
                     },
@@ -100,37 +122,147 @@
                 });
             });
 
+
+
+            $(".submit-assign").click(function(){
+                let empID = $(this).data('employee-id') 
+                let shiftID = $(this).data('shift-id')
+                let projectID = $(this).data('project-id')
+                // let remaining = $(this).data('remaining')
+                let assigned = $(`.input1[data-employee-id='${empID}']`).val()
+
+                if (assigned > remaining {
+                    alert("Assigned words exceed remaining capacity.");
+                    // handle
+                    return;
+                }
+
+
+                $.ajax({
+                    url: '/EmployeeProjects/AssignWords',   
+                    type: 'POST',
+                    data: {
+                        shiftId: shiftID,             // Sending shiftID
+                        employeeId: empID,            // Sending employeeID
+                        projectId: projectID,         // Sending projectID
+                        assignedWords: assigned       // Sending assigned words
+                    },
+                    success: function (response) {
+                        alert(response);  // Success message returned from the server
+                         
+                    },
+                    error: function (xhr, status, error) {
+                        alert("Error: " + xhr.responseText);  // Error message from the server
+                    }
+                });
+
+
+            })
+
             $(document).on("click", ".assign-btn", function () {
-                var remainingCapacity = $(this).data("remaining-capacity");
-                var assignInput = $(this).siblings(".assign-input");
+                $(this).closest('.card-footer').find('.assign-input').slideToggle();
 
-                assignInput.show();
+            });
+        });
+    </script>
+}
+ *@
 
-                assignInput.find(".submit-assign").click(function () {
-                    var assignedWords = parseInt(assignInput.find(".assign-words").val());
-                    if (assignedWords <= remainingCapacity) {
-                        $.ajax({
-                            url: '@Url.Action("AssignWords", "EmployeeProjects")',
-                            type: 'POST',
-                            data: {
-                                shiftId: $(this).parent().siblings(".assign-btn").data("shift-id"),
-                                employeeId: $(this).parent().siblings(".assign-btn").data("employee-id"),
-                                assignedWords: assignedWords
-                            },
-                            success: function () {
-                                alert("Words assigned successfully!");
-                                location.reload();  // Reload to refresh the capacity
-                            },
-                            error: function (xhr, status, error) {
-                                console.error("Error assigning words:", status, error);
-                                alert("An error occurred while assigning words. Please try again.");
-                            }
-                        });
-                    } else {
-                        alert("Assigned words exceed the remaining capacity!");
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Fetch Shifts when button clicked
+            $("#fetchShifts").click(function () {
+                var selectedDate = $("#selectedDate").val();
+                $.ajax({
+                    url: '@Url.Action("GetShiftsForDate", "EmployeeProjects")',
+                    type: 'GET',
+                    data: { selectedDate: selectedDate },
+                    success: function (data) {
+                        console.log(data); // Log data to inspect structure
+
+                        var shiftList = $("#shiftList");
+                        shiftList.empty();
+
+                        if (data.shifts.length === 0) {
+                            shiftList.append('<div class="col-12"><div class="alert alert-info">No shifts available for the selected date.</div></div>');
+                        }
+                        else {
+                            data.shifts.forEach(function (shift) {
+                                var employeeCard = `
+                                            <div class="col-md-4 mb-4">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h5 class="card-title">${shift.emp_Name || 'No Name'}</h5>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <p><strong>Shift Start:</strong> ${shift.shift_Start}</p>
+                                                        <p><strong>Shift End:</strong> ${shift.shift_End}</p>
+                                                        <p><strong>Remaining Capacity:</strong> ${shift.remaining_Capacity || 'Not Available'}</p>
+                                                    </div>
+                                                    <div class="card-footer">
+                                                        <button type="button" class="btn btn-primary assign-btn">Assign new task</button>
+                                                        <div class="assign-input mt-3" style="display:none;">
+                                                            <div class="form-group">
+                                                                <label class="mb-2">Assign words</label>
+                                                                <input class="form-control input1 mb-2" type="number" data-employee-id="${shift.employeeId}">
+                                                                <button type="button" data-remaining="${shift.remaining_Capacity || 0}" class="btn btn-success submit-assign" data-project-id="${shift.projectID}" data-shift-id="${shift.shiftID}" data-employee-id="${shift.employeeId}">Add</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `;
+
+                                shiftList.append(employeeCard);
+                            });
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error fetching shifts:", status, error);
+                        alert("An error occurred while fetching shifts. Please try again.");
                     }
                 });
             });
+
+             // Handle submit assign action
+            $(document).on("click", ".submit-assign", function () {
+                let empID = $(this).data('employee-id');
+                let shiftID = $(this).data('shift-id');
+                let projectID = $(this).data('project-id');
+                let remaining = $(this).data('remaining');
+                let assigned = $(`.input1[data-employee-id='${empID}']`).val();
+
+                // Validation: Ensure assigned words don't exceed remaining capacity
+                if (assigned > remaining) {
+                    alert("Assigned words exceed remaining capacity.");
+                    return;
+                }
+
+                // AJAX request to assign words
+                $.ajax({
+                    url: '/EmployeeProjects/AssignWords',
+                    type: 'POST',
+                    data: {
+                        ShiftID: shiftID,
+                        EmployeeID: empID,
+                        ProjectID: projectID,
+                        Assigned: assigned
+                    },
+                    success: function (response) {
+                        alert(response); // Show success message
+                    },
+                    error: function (xhr, status, error) {
+                        alert("Error: " + xhr.responseText); // Show error message
+                    }
+                });
+            });
+
+            // Handle assign button click to show/hide input form
+            $(document).on("click", ".assign-btn", function () {
+                $(this).closest('.card-footer').find('.assign-input').slideToggle();
+            });
+
         });
     </script>
 }
