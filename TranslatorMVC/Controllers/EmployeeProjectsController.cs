@@ -46,20 +46,42 @@ namespace TranslatorMVC.Controllers
         }
 
         // GET: EmployeeProjects/Create
+        // GET: EmployeeProjects/Create
         public IActionResult Create(int projectId)
         {
-            ViewBag.EmployeeID = _context.Employee?.OrderBy(e => e.Emp_Name)?.Select(e => new SelectListItem { Value = e.EmployeeID.ToString(), Text = e.Emp_Name }).ToList();
-            // ViewBag.ProjectID = _context.Project?.OrderBy(e => e.Proj_Name)?.Select(e => new SelectListItem { Value = e.ProjectID.ToString(), Text = e.Proj_Name }).ToList();
+            // Fetch the project with the given projectId
+            var project = _context.Project.Where(p => p.ProjectID == projectId).FirstOrDefault();
 
-            var p = _context.Project.Where(e => e.ProjectID == projectId).FirstOrDefault();
-            // Use the projectId parameter here
+            if (project == null)
+            {
+                return NotFound("Project not found.");
+            }
+
+            // Fetch the total assigned words for the current project
+            var totalAssignedForProject = _context.EmployeeProject
+                .Where(ep => ep.ProjectID == projectId && !ep.isCompleted) // Only include ongoing tasks
+                .Sum(ep => (int?)ep.Assigned) ?? 0; // Sum the assigned words, default to 0 if no records
+
+            // Calculate the remaining capacity for the project
+            var remainingProjectCapacity = project.Proj_Capacity - totalAssignedForProject;
+
+            // Populate ViewBag with necessary data for the view
+            ViewBag.EmployeeID = _context.Employee?
+                .OrderBy(e => e.Emp_Name)?
+                .Select(e => new SelectListItem { Value = e.EmployeeID.ToString(), Text = e.Emp_Name })
+                .ToList();
+
+            ViewBag.ProjectID = projectId;
+            ViewBag.RemainingProjectCapacity = remainingProjectCapacity; // Pass remaining capacity to the view
+
+            // Create the model with the provided projectId
             var model = new EmployeeProject
             {
                 ProjectID = projectId,
-                Project = p
+                Project = project
             };
 
-            return View();
+            return View(model);
         }
 
 
@@ -191,9 +213,11 @@ namespace TranslatorMVC.Controllers
             {
                 // Fetch shifts for the selected date and include the Employee navigation property
                 var shifts = _context.Shift
-                    .Where(s => s.Shift_Start.Date == selectedDate.Date && s.Shift_Active)
+                    .Where(s => s.Shift_Start.Date == selectedDate.Date && s.Shift_IsDeleted == false)
                     .Include(s => s.Employee) // Assuming Employee is a navigation property in Shift
                     .ToList();
+
+
 
                 var response = new List<object>();
 
@@ -218,6 +242,7 @@ namespace TranslatorMVC.Controllers
                         // Build response object with employee name, shift details, and remaining capacity
                         response.Add(new
                         {
+
                             shiftID = s.ShiftID,
                             EmployeeId = s.EmployeeID,
                             Emp_Name = employeeName,
@@ -246,6 +271,7 @@ namespace TranslatorMVC.Controllers
         [HttpPost]
         public IActionResult AssignWords(int ShiftID, int EmployeeID, int ProjectID, int Assigned)
         {
+
             try
             {
                 // Fetch the shift to validate if the shift exists and capacity
@@ -259,10 +285,13 @@ namespace TranslatorMVC.Controllers
 
                 // Fetch any existing assignment for the same employee and shift (optional, if needed)
                 var existingAssignment = _context.EmployeeProject
-                    .FirstOrDefault(ep => ep.ShiftID == ShiftID && ep.EmployeeID == EmployeeID);
+                    .FirstOrDefault(ep => ep.ShiftID == ShiftID && ep.EmployeeID == EmployeeID && ep.isCompleted == false);
 
                 // Calculate remaining capacity (subtract assigned words from capacity)
                 var remainingCapacity = shift.Emp_Capacity - (existingAssignment?.Assigned ?? 0);
+
+                // this is for testing purposes
+                // return BadRequest(remainingCapacity);
 
                 if (Assigned > remainingCapacity)
                 {
@@ -272,6 +301,7 @@ namespace TranslatorMVC.Controllers
                 // Create a new EmployeeProject record with the provided EmployeeID, ProjectID, ShiftID, and assignedWords
                 var newEmployeeProject = new EmployeeProject
                 {
+
                     ShiftID = ShiftID,
                     EmployeeID = EmployeeID,
                     ProjectID = ProjectID,  // Make sure ProjectID is added in the EmployeeProject model
